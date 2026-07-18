@@ -1,0 +1,1 @@
+pip install playwright gspread oauth2client groq python-dotenv
