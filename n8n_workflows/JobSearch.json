@@ -1,0 +1,971 @@
+{
+  "name": "JobSearch",
+  "nodes": [
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1GIuheaHiaShDd-jAgoCp5ZMMS5wWA6A0SXbA6EZLlio",
+          "mode": "list",
+          "cachedResultName": "Job Hunter",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1GIuheaHiaShDd-jAgoCp5ZMMS5wWA6A0SXbA6EZLlio/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 517322106,
+          "mode": "list",
+          "cachedResultName": "UpdatedFilters",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1GIuheaHiaShDd-jAgoCp5ZMMS5wWA6A0SXbA6EZLlio/edit#gid=517322106"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1696,
+        -2688
+      ],
+      "id": "ed9a703f-4dd8-41b6-9e20-da8f817f5634",
+      "name": "ReadFilters",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "oB0qGc5yuT5TYiuc",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ======================================================\n// Build Execution Queue\n// Reads: Filters + Providers\n// Mode: Run Once for All Items\n// ======================================================\n\n// ------------------------------------------------------\n// Read Inputs\n// ------------------------------------------------------\n\nconst filters = $('ReadFilters').all();\nconst providers = $('ReadProviders').all();\n\n// ------------------------------------------------------\n// Helper\n// ------------------------------------------------------\n\nfunction isEnabled(value) {\n    if (typeof value === \"boolean\") return value;\n    if (typeof value === \"number\") return value === 1;\n\n    return String(value || \"\")\n        .trim()\n        .toLowerCase() === \"true\";\n}\n\n// ------------------------------------------------------\n// Build Queue\n// ------------------------------------------------------\n\nconst queue = [];\nconst createdAt = new Date().toISOString();\n\nlet counter = 1;\n\nfor (const filterItem of filters) {\n\n    const filter = filterItem.json;\n\n    // Skip disabled filters (optional)\n    if (\n        filter.Enabled !== undefined &&\n        !isEnabled(filter.Enabled)\n    ) {\n        continue;\n    }\n\n    for (const providerItem of providers) {\n\n        const provider = providerItem.json;\n\n        // Skip disabled providers\n        if (!isEnabled(provider.Enabled)) {\n            continue;\n        }\n\n        queue.push({\n\n            json: {\n\n                requestId: `REQ-${Date.now()}-${counter++}`,\n\n                createdAt,\n\n                status: \"PENDING\",\n\n                provider: provider.Provider,\n\n                providerType: provider.Type,\n\n\n                keyword: filter.Keyword,\n\n                location: filter.Location || \"Any\",\n\n                experience: filter.Experience || \"Any\",\n\n                remote: filter.Remote || \"Any\",\n\n                jobType: filter[\"Job Type\"] || \"Any\"\n\n            }\n\n        });\n\n    }\n\n}\n\n// ------------------------------------------------------\n// Sort by Provider Priority\n// ------------------------------------------------------\n\n\n// ------------------------------------------------------\n// Log\n// ------------------------------------------------------\n\nconsole.log(`Filters : ${filters.length}`);\nconsole.log(`Providers : ${providers.length}`);\nconsole.log(`Requests : ${queue.length}`);\n\n// ------------------------------------------------------\n// Return\n// ------------------------------------------------------\n\nreturn queue;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1248,
+        -2880
+      ],
+      "id": "7f3df0ef-4d0f-426f-a4ae-85a240eb4b48",
+      "name": "BuildSearchQueue"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1GIuheaHiaShDd-jAgoCp5ZMMS5wWA6A0SXbA6EZLlio",
+          "mode": "list",
+          "cachedResultName": "Job Hunter",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1GIuheaHiaShDd-jAgoCp5ZMMS5wWA6A0SXbA6EZLlio/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 556525589,
+          "mode": "list",
+          "cachedResultName": "Providers",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1GIuheaHiaShDd-jAgoCp5ZMMS5wWA6A0SXbA6EZLlio/edit#gid=556525589"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1472,
+        -2688
+      ],
+      "id": "5691ab5f-ec53-442d-aca9-d3d17d913f2c",
+      "name": "ReadProviders",
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "oB0qGc5yuT5TYiuc",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/search",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"requestId\": \"{{$json.requestId}}\",\n  \"createdAt\": \"{{$json.createdAt}}\",\n  \"status\": \"{{$json.status}}\",\n  \"provider\": \"Wellfound\",\n  \"providerType\": \"UI\",\n  \"keyword\": \"{{$json.keyword}}\",\n  \"location\": \"{{$json.location}}\",\n  \"experience\": \"{{$json.experience}}\",\n  \"remote\": \"{{$json.remote}}\",\n  \"jobType\": \"{{$json.jobType}}\"\n}",
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -576,
+        -3072
+      ],
+      "id": "9296c483-e0da-4a86-86fe-930f1baba615",
+      "name": "WellFound",
+      "alwaysOutputData": false,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// =========================================\n// WELLFOUND NORMALIZER\n// =========================================\n\nconst normalized = [];\n\nfor (const item of items) {\n\n    const response = item.json;\n\n    if (\n        response.status !== \"SUCCESS\" ||\n        !Array.isArray(response.jobs)\n    ) {\n        continue;\n    }\n\n    for (const job of response.jobs) {\n\n        // ----------------------------------\n        // Work Mode\n        // ----------------------------------\n\n        let workMode = \"Unknown\";\n\n        if (job.workMode) {\n\n            const mode = job.workMode.toLowerCase();\n\n            if (mode.includes(\"remote\")) {\n                workMode = \"Remote\";\n            }\n\n            else if (\n                mode.includes(\"office\") ||\n                mode.includes(\"onsite\")\n            ) {\n                workMode = \"Onsite\";\n            }\n\n            else if (\n                mode.includes(\"hybrid\") ||\n                mode.includes(\"onsite or remote\")\n            ) {\n                workMode = \"Hybrid\";\n            }\n        }\n\n        // ----------------------------------\n        // Salary Parsing\n        // ----------------------------------\n\n        let currency = null;\n        let salaryMin = null;\n        let salaryMax = null;\n        let equity = null;\n\n        const rawSalary = job.salary ?? null;\n\n        if (rawSalary) {\n\n            if (rawSalary.includes(\"₹\")) currency = \"INR\";\n            else if (rawSalary.includes(\"$\")) currency = \"USD\";\n            else if (rawSalary.includes(\"€\")) currency = \"EUR\";\n            else if (rawSalary.includes(\"£\")) currency = \"GBP\";\n\n            const salaryPart = rawSalary.split(\"•\")[0].trim();\n\n            const values = salaryPart.match(/[\\d,.]+[KLM]?/gi);\n\n            function parseAmount(value) {\n\n                if (!value) return null;\n\n                value = value.replace(/,/g, \"\");\n\n                let multiplier = 1;\n\n                if (/K$/i.test(value)) {\n                    multiplier = 1000;\n                    value = value.slice(0, -1);\n                }\n\n                else if (/L$/i.test(value)) {\n                    multiplier = 100000;\n                    value = value.slice(0, -1);\n                }\n\n                else if (/M$/i.test(value)) {\n                    multiplier = 1000000;\n                    value = value.slice(0, -1);\n                }\n\n                return Math.round(parseFloat(value) * multiplier);\n            }\n\n            if (values?.length > 0)\n                salaryMin = parseAmount(values[0]);\n\n            if (values?.length > 1)\n                salaryMax = parseAmount(values[1]);\n\n            if (rawSalary.includes(\"•\")) {\n                equity = rawSalary.split(\"•\")[1].trim();\n            }\n        }\n\n        // ----------------------------------\n        // Normalize\n        // ----------------------------------\n\n        normalized.push({\n\n            requestId: response.requestId,\n\n            provider: response.provider,\n\n            providerType: \"Search\",\n\n            jobId: job.jobId ?? null,\n\n            title: job.title ?? \"\",\n\n            company: null,\n\n            location: job.location ?? null,\n\n            workMode,\n\n            employmentType: null,\n\n            experience: job.expierence ?? null,\n\n            salary: {\n\n                currency,\n\n                min: salaryMin,\n\n                max: salaryMax,\n\n                equity,\n\n                raw: rawSalary,\n\n            },\n\n            description: null,\n\n            skills: [],\n\n            tags: [],\n\n            recruiterActive:\n                job.recruiterActive ?? false,\n\n            postedAt:\n                job.posted ?? null,\n\n            applyUrl:\n                job.url,\n\n            companyLogo: null,\n\n            sourceUrl:\n                job.url,\n\n            status: \"FOUND\",\n\n            createdAt:\n                new Date().toISOString(),\n\n            metadata: {}\n\n        });\n\n    }\n}\n\nreturn normalized.map(job => ({ json: job }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -352,
+        -3072
+      ],
+      "id": "c32ec685-3034-41ed-a86d-b35a0e98d818",
+      "name": "NormalizerWellFound"
+    },
+    {
+      "parameters": {
+        "jsCode": "// =======================================================\n// Master Normalizer\n// Clean + Standardize Jobs\n// Mode: Run Once for All Items\n// =======================================================\n\n// -------------------------------------------------------\n// HTML Cleaner\n// -------------------------------------------------------\nfunction cleanHtml(html) {\n    if (!html) return \"\";\n\n    return String(html)\n        .replace(/<br\\s*\\/?>/gi, \"\\n\")\n        .replace(/<\\/p>/gi, \"\\n\")\n        .replace(/<p[^>]*>/gi, \"\")\n        .replace(/<\\/li>/gi, \"\\n\")\n        .replace(/<li[^>]*>/gi, \"• \")\n        .replace(/<\\/?(ul|ol|div|span|strong|b|em|i|h1|h2|h3|h4|h5|h6)[^>]*>/gi, \"\")\n        .replace(/<[^>]+>/g, \"\")\n        .replace(/&nbsp;/gi, \" \")\n        .replace(/&amp;/gi, \"&\")\n        .replace(/&quot;/gi, '\"')\n        .replace(/&#39;/gi, \"'\")\n        .replace(/&lt;/gi, \"<\")\n        .replace(/&gt;/gi, \">\")\n        .replace(/\\r/g, \"\")\n        .replace(/\\t/g, \" \")\n        .replace(/\\n{3,}/g, \"\\n\\n\")\n        .replace(/[ ]{2,}/g, \" \")\n        .trim();\n}\n\nconst output = [];\nconst now = Date.now\nconst seen = new Set();\n\nfor (const item of $input.all()) {\n\n    const job = { ...item.json };\n\n    // ---------------------------------------------------\n    // Trim strings + clean HTML\n    // ---------------------------------------------------\n\n    for (const key of Object.keys(job)) {\n\n        if (typeof job[key] !== \"string\") continue;\n\n        job[key] = job[key].trim();\n\n        if (key === \"description\") {\n            job[key] = cleanHtml(job[key]);\n        }\n    }\n\n    // ---------------------------------------------------\n    // Clean tags\n    // ---------------------------------------------------\n\n    if (Array.isArray(job.tags)) {\n        job.tags = [...new Set(\n            job.tags\n                .filter(Boolean)\n                .map(tag => String(tag).trim())\n        )];\n    } else {\n        job.tags = [];\n    }\n\n    // ---------------------------------------------------\n    // Skip invalid jobs\n    // ---------------------------------------------------\n\n    if (!job.provider || !job.title) {\n        continue;\n    }\n\n  \n// -----------------------------------------\n// Posted filter\n// Keep only:\n// - Today\n// - Yesterday\n// -----------------------------------------\n\nif (job.postedAt) {\n\n    const posted = job.postedAt.toLowerCase().trim();\n\n    let keep = false;\n\n    // Convert words to numbers\n    const normalized = posted\n        .replace(/\\bone\\b/g, \"1\")\n        .replace(/\\btwo\\b/g, \"2\")\n        .replace(/\\bthree\\b/g, \"3\")\n        .replace(/\\bfour\\b/g, \"4\")\n        .replace(/\\bfive\\b/g, \"5\")\n        .replace(/\\bsix\\b/g, \"6\")\n        .replace(/\\bseven\\b/g, \"7\")\n        .replace(/\\beight\\b/g, \"8\")\n        .replace(/\\bnine\\b/g, \"9\")\n        .replace(/\\bten\\b/g, \"10\")\n        .replace(/\\beleven\\b/g, \"11\")\n        .replace(/\\btwelve\\b/g, \"12\")\n        .replace(/\\bthirteen\\b/g, \"13\")\n        .replace(/\\bfourteen\\b/g, \"14\")\n        .replace(/\\bfifteen\\b/g, \"15\")\n        .replace(/\\bsixteen\\b/g, \"16\")\n        .replace(/\\bseventeen\\b/g, \"17\")\n        .replace(/\\beighteen\\b/g, \"18\")\n        .replace(/\\bnineteen\\b/g, \"19\")\n        .replace(/\\btwenty\\b/g, \"20\")\n        .replace(/\\btwenty[- ]one\\b/g, \"21\")\n        .replace(/\\btwenty[- ]two\\b/g, \"22\")\n        .replace(/\\btwenty[- ]three\\b/g, \"23\")\n        .replace(/\\btwenty[- ]four\\b/g, \"24\");\n\n    // Instant / same day\n    if (\n        normalized.includes(\"just now\") ||\n        normalized.includes(\"moments ago\") ||\n        normalized.includes(\"few seconds\") ||\n        normalized.includes(\"seconds ago\") ||\n        normalized.includes(\"few minutes\") ||\n        normalized.includes(\"minutes ago\") ||\n        normalized.includes(\"minute ago\") ||\n        normalized.includes(\"few hours\") ||\n        normalized.includes(\"few hour\") ||\n        normalized.includes(\"a few hours\") ||\n        normalized.includes(\"couple of hours\") ||\n        normalized.includes(\"today\")\n    ) {\n        keep = true;\n    } else {\n\n        const match = normalized.match(/(\\d+)/);\n\n        if (match) {\n\n            const value = Number(match[1]);\n\n            // Keep only jobs posted within 24 hours\n            if (normalized.includes(\"hour\")) {\n                keep = value <= 24;\n            }\n\n            // Reject everything measured in days, weeks, months, years\n            else if (\n                normalized.includes(\"day\") ||\n                normalized.includes(\"week\") ||\n                normalized.includes(\"month\") ||\n                normalized.includes(\"year\") ||\n                normalized.includes(\"yesterday\")\n            ) {\n                keep = false;\n            }\n        }\n    }\n\n    if (!keep) {\n        continue;\n    }\n}\n  // ---------------------------------------------------\n  // Remove duplicates\n  // ---------------------------------------------------\n  \n    const duplicateKey = [\n        job.provider || \"\",\n        (job.title || \"\").toLowerCase().trim(),\n        (job.location || \"\").toLowerCase().trim()\n    ].join(\"|\");\n    \n    if (seen.has(duplicateKey)) {\n        continue;\n    }\n  \n    seen.add(duplicateKey);\n\n    // ---------------------------------------------------\n    // Output\n    // ---------------------------------------------------\n\n    output.push({\n        json: {\n\n            uniqueId:\n                job.uniqueId ||\n                `${job.provider}_${job.jobId || job.applyUrl || job.jobUrl || job.title}`,\n\n            provider: job.provider,\n\n            jobId: job.jobId ?? null,\n\n            title: job.title,\n\n            company: job.company || \"\",\n\n            location: job.location || \"Unknown\",\n\n            workMode: job.workMode || \"Unknown\",\n\n            employmentType: job.employmentType || \"Unknown\",\n\n            experience: job.experience ?? null,\n\n            salaryMin: job.salaryMin ?? null,\n\n            salaryMax: job.salaryMax ?? null,\n\n            description: job.description || \"\",\n\n            applyUrl: job.applyUrl || \"\",\n\n            jobUrl: job.jobUrl || job.applyUrl || \"\",\n\n            postedAt: job.postedAt ?? null,\n\n            applied: false,\n\n            createdAt:\n                job.createdAt || new Date().toISOString()\n\n        }\n    });\n\n}\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        -2784
+      ],
+      "id": "e3305f22-4990-49b4-8568-56b5cc8cd515",
+      "name": "MasterNormalizer"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/search",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"requestId\": \"{{$json.requestId}}\",\n  \"createdAt\": \"{{$json.createdAt}}\",\n  \"status\": \"{{$json.status}}\",\n  \"provider\": \"Hirist\",\n  \"providerType\": \"UI\",\n  \"keyword\": \"{{$json.keyword}}\",\n  \"location\": \"{{$json.location}}\",\n  \"experience\": \"{{$json.experience}}\",\n  \"remote\": \"{{$json.remote}}\",\n  \"jobType\": \"{{$json.jobType}}\"\n}",
+        "options": {
+          "timeout": 6000000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -576,
+        -2880
+      ],
+      "id": "f1d095b7-dabf-4d62-8e6d-f7dd506863f4",
+      "name": "Hirist",
+      "alwaysOutputData": false,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const output = [];\n\nfor (const item of items) {\n\n    const response = item.json;\n\n    if (\n        response.status !== \"SUCCESS\" ||\n        !Array.isArray(response.jobs)\n    ) {\n        continue;\n    }\n\n    for (const job of response.jobs) {\n\n        output.push({\n            json: {\n                provider: response.provider,\n\n                jobId: job.jobId ?? null,\n\n                title: job.title ?? null,\n\n                company: null,\n\n                location: job.location ?? null,\n\n                workMode: \"Unknown\",\n\n                employmentType: null,\n\n                experience: job.experience ?? null,\n\n                salaryMin: null,\n\n                salaryMax: null,\n\n                currency: null,\n\n                description: null,\n\n                tags: job.skills ?? [],\n\n                applyUrl: job.url ?? null,\n\n                companyLogo: null,\n\n                postedAt: job.posted ?? null,\n\n                atsScore: null,\n\n                matchedSkills: [],\n\n                missingSkills: [],\n\n                summary: null,\n\n                duplicate: false,\n\n                applied: false,\n\n                bookmarked: false,\n\n                status: \"FOUND\",\n\n                createdAt: new Date().toISOString(),\n            },\n        });\n\n    }\n\n}\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -352,
+        -2880
+      ],
+      "id": "cb1de6e8-b268-4a2d-b2b8-6fe9b08982e4",
+      "name": "NormalizerHirist"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/search",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"requestId\": \"{{$json.requestId}}\",\n  \"createdAt\": \"{{$json.createdAt}}\",\n  \"status\": \"{{$json.status}}\",\n  \"provider\": \"Naukri\",\n  \"providerType\": \"UI\",\n  \"keyword\": \"{{$json.keyword}}\",\n  \"location\": \"{{$json.location}}\",\n  \"experience\": \"{{$json.experience}}\",\n  \"remote\": \"{{$json.remote}}\",\n  \"jobType\": \"{{$json.jobType}}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -576,
+        -2688
+      ],
+      "id": "43452d13-d244-4fec-917e-5ae14e52dd1f",
+      "name": "Naukri",
+      "alwaysOutputData": false,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// =========================================\n// WELLFOUND NORMALIZER\n// =========================================\n\nconst normalized = [];\n\nfor (const item of items) {\n\n    const response = item.json;\n\n    if (\n        response.status !== \"SUCCESS\" ||\n        !Array.isArray(response.jobs)\n    ) {\n        continue;\n    }\n\n    for (const job of response.jobs) {\n\n        // ----------------------------------\n        // Work Mode\n        // ----------------------------------\n\n        let workMode = \"Unknown\";\n\n        if (job.workMode) {\n\n            const mode = job.workMode.toLowerCase();\n\n            if (mode.includes(\"remote\")) {\n                workMode = \"Remote\";\n            }\n\n            else if (\n                mode.includes(\"office\") ||\n                mode.includes(\"onsite\")\n            ) {\n                workMode = \"Onsite\";\n            }\n\n            else if (\n                mode.includes(\"hybrid\") ||\n                mode.includes(\"onsite or remote\")\n            ) {\n                workMode = \"Hybrid\";\n            }\n        }\n\n        // ----------------------------------\n        // Salary Parsing\n        // ----------------------------------\n\n        let currency = null;\n        let salaryMin = null;\n        let salaryMax = null;\n        let equity = null;\n\n        const rawSalary = job.salary ?? null;\n\n        if (rawSalary) {\n\n            if (rawSalary.includes(\"₹\")) currency = \"INR\";\n            else if (rawSalary.includes(\"$\")) currency = \"USD\";\n            else if (rawSalary.includes(\"€\")) currency = \"EUR\";\n            else if (rawSalary.includes(\"£\")) currency = \"GBP\";\n\n            const salaryPart = rawSalary.split(\"•\")[0].trim();\n\n            const values = salaryPart.match(/[\\d,.]+[KLM]?/gi);\n\n            function parseAmount(value) {\n\n                if (!value) return null;\n\n                value = value.replace(/,/g, \"\");\n\n                let multiplier = 1;\n\n                if (/K$/i.test(value)) {\n                    multiplier = 1000;\n                    value = value.slice(0, -1);\n                }\n\n                else if (/L$/i.test(value)) {\n                    multiplier = 100000;\n                    value = value.slice(0, -1);\n                }\n\n                else if (/M$/i.test(value)) {\n                    multiplier = 1000000;\n                    value = value.slice(0, -1);\n                }\n\n                return Math.round(parseFloat(value) * multiplier);\n            }\n\n            if (values?.length > 0)\n                salaryMin = parseAmount(values[0]);\n\n            if (values?.length > 1)\n                salaryMax = parseAmount(values[1]);\n\n            if (rawSalary.includes(\"•\")) {\n                equity = rawSalary.split(\"•\")[1].trim();\n            }\n        }\n\n        // ----------------------------------\n        // Normalize\n        // ----------------------------------\n\n        normalized.push({\n\n            requestId: response.requestId,\n\n            provider: response.provider,\n\n            providerType: \"Search\",\n\n            jobId: job.jobId ?? null,\n\n            title: job.title ?? \"\",\n\n            company: null,\n\n            location: job.location ?? null,\n\n            workMode,\n\n            employmentType: null,\n\n            experience: job.experience ?? null,\n\n            salary: {\n\n                currency,\n\n                min: salaryMin,\n\n                max: salaryMax,\n\n                equity,\n\n                raw: rawSalary,\n\n            },\n\n            description: job.description,\n\n            skills: [],\n\n            tags: [],\n\n            recruiterActive:\n                job.recruiterActive ?? false,\n\n            postedAt:\n                job.posted ?? null,\n\n            applyUrl:\n                job.url,\n\n            companyLogo: null,\n\n            sourceUrl:\n                job.url,\n\n            status: \"FOUND\",\n\n            createdAt:\n                new Date().toISOString(),\n\n            metadata: {}\n\n        });\n\n    }\n}\n\nreturn normalized.map(job => ({ json: job }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -352,
+        -2688
+      ],
+      "id": "f6eaa426-ca75-448e-9ebb-2874d7292f9d",
+      "name": "NormalizerNaukri"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/search",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"requestId\": \"{{$json.requestId}}\",\n  \"createdAt\": \"{{$json.createdAt}}\",\n  \"status\": \"{{$json.status}}\",\n  \"provider\": \"Internshala\",\n  \"providerType\": \"UI\",\n  \"keyword\": \"{{$json.keyword}}\",\n  \"location\": \"{{$json.location}}\",\n  \"experience\": \"{{$json.experience}}\",\n  \"remote\": \"{{$json.remote}}\",\n  \"jobType\": \"{{$json.jobType}}\"\n}",
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -576,
+        -2496
+      ],
+      "id": "9bd93bad-67a6-451d-a8ef-cd3a1730776e",
+      "name": "Internshala",
+      "alwaysOutputData": false,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// =========================================\n// WELLFOUND NORMALIZER\n// =========================================\n\nconst normalized = [];\n\nfor (const item of items) {\n\n    const response = item.json;\n\n    if (\n        response.status !== \"SUCCESS\" ||\n        !Array.isArray(response.jobs)\n    ) {\n        continue;\n    }\n\n    for (const job of response.jobs) {\n\n        // ----------------------------------\n        // Work Mode\n        // ----------------------------------\n\n        let workMode = \"Unknown\";\n\n        if (job.workMode) {\n\n            const mode = job.workMode.toLowerCase();\n\n            if (mode.includes(\"remote\")) {\n                workMode = \"Remote\";\n            }\n\n            else if (\n                mode.includes(\"office\") ||\n                mode.includes(\"onsite\")\n            ) {\n                workMode = \"Onsite\";\n            }\n\n            else if (\n                mode.includes(\"hybrid\") ||\n                mode.includes(\"onsite or remote\")\n            ) {\n                workMode = \"Hybrid\";\n            }\n        }\n\n        // ----------------------------------\n        // Salary Parsing\n        // ----------------------------------\n\n        let currency = null;\n        let salaryMin = null;\n        let salaryMax = null;\n        let equity = null;\n\n        const rawSalary = job.salary ?? null;\n\n        if (rawSalary) {\n\n            if (rawSalary.includes(\"₹\")) currency = \"INR\";\n            else if (rawSalary.includes(\"$\")) currency = \"USD\";\n            else if (rawSalary.includes(\"€\")) currency = \"EUR\";\n            else if (rawSalary.includes(\"£\")) currency = \"GBP\";\n\n            const salaryPart = rawSalary.split(\"•\")[0].trim();\n\n            const values = salaryPart.match(/[\\d,.]+[KLM]?/gi);\n\n            function parseAmount(value) {\n\n                if (!value) return null;\n\n                value = value.replace(/,/g, \"\");\n\n                let multiplier = 1;\n\n                if (/K$/i.test(value)) {\n                    multiplier = 1000;\n                    value = value.slice(0, -1);\n                }\n\n                else if (/L$/i.test(value)) {\n                    multiplier = 100000;\n                    value = value.slice(0, -1);\n                }\n\n                else if (/M$/i.test(value)) {\n                    multiplier = 1000000;\n                    value = value.slice(0, -1);\n                }\n\n                return Math.round(parseFloat(value) * multiplier);\n            }\n\n            if (values?.length > 0)\n                salaryMin = parseAmount(values[0]);\n\n            if (values?.length > 1)\n                salaryMax = parseAmount(values[1]);\n\n            if (rawSalary.includes(\"•\")) {\n                equity = rawSalary.split(\"•\")[1].trim();\n            }\n        }\n\n        // ----------------------------------\n        // Normalize\n        // ----------------------------------\n\n        normalized.push({\n\n            requestId: response.requestId,\n\n            provider: response.provider,\n\n            providerType: \"Search\",\n\n            jobId: job.jobId ?? null,\n\n            title: job.title ?? \"\",\n\n            company: null,\n\n            location: job.location ?? null,\n\n            workMode,\n\n            employmentType: null,\n\n            experience: job.experience ?? null,\n\n            salary: {\n\n                currency,\n\n                min: salaryMin,\n\n                max: salaryMax,\n\n                equity,\n\n                raw: rawSalary,\n\n            },\n\n            description: job.description,\n\n            skills: [],\n\n            tags: [],\n\n            recruiterActive:\n                job.recruiterActive ?? false,\n\n            postedAt:\n                job.posted ?? null,\n\n            applyUrl:\n                job.url,\n\n            companyLogo: null,\n\n            sourceUrl:\n                job.url,\n\n            status: \"FOUND\",\n\n            createdAt:\n                new Date().toISOString(),\n\n            metadata: {}\n\n        });\n\n    }\n}\n\nreturn normalized.map(job => ({ json: job }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -352,
+        -2496
+      ],
+      "id": "cc6afbbb-e9f4-49c1-a216-ee38fb43c91d",
+      "name": "NormalizerInternshala"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ======================================================\n// Build Execution Queue\n// Reads: Filters + Providers\n// Mode: Run Once for All Items\n// ======================================================\n\n// ------------------------------------------------------\n// Read Inputs\n// ------------------------------------------------------\n\nconst filters = $('ReadFilters').all();\nconst providers = $('ReadProviders').all();\n\n// ------------------------------------------------------\n// Internshala Profiles\n// ------------------------------------------------------\n\nconst internshalaProfiles = [\n    \"Artificial Intelligence (AI)\",\n    \"AI Agent Development\",\n    \"Prompt Engineering\",\n    \"Backend Development\",\n    \"Full Stack Development\",\n    \"Front End Development\",\n    \"Web Development\",\n    \"Software Development\",\n    \"Javascript Development\",\n    \"Node.js Development\",\n    \"Angular.js Development\",\n    \"Software Testing\"\n];\n\n// ------------------------------------------------------\n// Helper\n// ------------------------------------------------------\n\nfunction isEnabled(value) {\n    if (typeof value === \"boolean\") return value;\n    if (typeof value === \"number\") return value === 1;\n\n    return String(value || \"\")\n        .trim()\n        .toLowerCase() === \"true\";\n}\n\n// ------------------------------------------------------\n// Build Queue\n// ------------------------------------------------------\n\nconst queue = [];\nconst createdAt = new Date().toISOString();\n\nlet counter = 1;\n\nfor (const providerItem of providers) {\n\n    const provider = providerItem.json;\n\n    // Skip disabled providers\n    if (!isEnabled(provider.Enabled)) {\n        continue;\n    }\n\n    // ==================================================\n    // Internshala\n    // One request per profile\n    // ==================================================\n\n    if (provider.Provider === \"Internshala\") {\n\n        for (const profile of internshalaProfiles) {\n\n            queue.push({\n\n                json: {\n\n                    requestId: `REQ-${Date.now()}-${counter++}`,\n\n                    createdAt,\n\n                    status: \"PENDING\",\n\n                    provider: provider.Provider,\n\n                    providerType: provider.Type,\n\n                    keyword: profile,\n\n                    location: \"Any\",\n\n                    experience: \"0 - 1 yrs\",\n\n                    remote: \"Any\",\n\n                    jobType: \"Any\"\n\n                }\n\n            });\n\n        }\n\n        continue;\n    }\n\n    // ==================================================\n    // All Other Providers\n    // Use Filters Sheet\n    // ==================================================\n\n    for (const filterItem of filters) {\n\n        const filter = filterItem.json;\n\n        // Skip disabled filters\n        if (\n            filter.Enabled !== undefined &&\n            !isEnabled(filter.Enabled)\n        ) {\n            continue;\n        }\n\n        queue.push({\n\n            json: {\n\n                requestId: `REQ-${Date.now()}-${counter++}`,\n\n                createdAt,\n\n                status: \"PENDING\",\n\n                provider: provider.Provider,\n\n                providerType: provider.Type,\n\n                keyword: filter.Keyword,\n\n                location: filter.Location || \"Any\",\n\n                experience: filter.Experience || \"Any\",\n\n                remote: filter.Remote || \"Any\",\n\n                jobType: filter[\"Job Type\"] || \"Any\"\n\n            }\n\n        });\n\n    }\n\n}\n\n// ------------------------------------------------------\n// Log\n// ------------------------------------------------------\n\nconsole.log(`Filters : ${filters.length}`);\nconsole.log(`Providers : ${providers.length}`);\nconsole.log(`Requests : ${queue.length}`);\n\n// ------------------------------------------------------\n// Return\n// ------------------------------------------------------\n\nreturn queue;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1248,
+        -2496
+      ],
+      "id": "c0965473-8827-402c-9d11-376c72773cdc",
+      "name": "BuildSearchInternshala"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "e6f5afab-43e6-4968-bf43-6cb3c3f5ed1d",
+                    "leftValue": "={{$json.provider}}",
+                    "rightValue": "Internshala",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -800,
+        -2496
+      ],
+      "id": "73740492-dc5e-4b09-a338-a42ab5d90c52",
+      "name": "InternShala"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "284f6cd4-0a6f-48ff-bf57-bbc749b6a238",
+                    "leftValue": "={{$json.provider}}",
+                    "rightValue": "=Wellfound",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "e6f5afab-43e6-4968-bf43-6cb3c3f5ed1d",
+                    "leftValue": "={{$json.provider}}",
+                    "rightValue": "Hirist",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "5d0578a3-c559-4b8b-97e8-2c97eccb80da",
+                    "leftValue": "={{$json.provider}}",
+                    "rightValue": "Naukri",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -800,
+        -2896
+      ],
+      "id": "793a0f6e-f1ae-443e-82b1-98405c6aeb2e",
+      "name": "Wellfound, Naukri, Hirist"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.providerType}}",
+                    "rightValue": "API",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "4710ac6d-c461-4606-ad67-698aef9768d3"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "5102f8c5-e8b6-4fc0-aa44-78fea0a0322a",
+                    "leftValue": "={{$json.providerType}}",
+                    "rightValue": "Search",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -1024,
+        -2880
+      ],
+      "id": "2c85a00a-28ae-40f7-bb28-15a25f3187d1",
+      "name": "API, Search"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "5102f8c5-e8b6-4fc0-aa44-78fea0a0322a",
+                    "leftValue": "={{$json.providerType}}",
+                    "rightValue": "Search",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -1024,
+        -2496
+      ],
+      "id": "f61b82a6-8564-4eee-8893-d9ea79b1f327",
+      "name": "Search"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1X_rCmqAUBbG1lTGYLqNo6_RphNXKD8XXI_X2NNapiaE",
+          "mode": "list",
+          "cachedResultName": "DataBase",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1X_rCmqAUBbG1lTGYLqNo6_RphNXKD8XXI_X2NNapiaE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1096480691,
+          "mode": "list",
+          "cachedResultName": "Search",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1X_rCmqAUBbG1lTGYLqNo6_RphNXKD8XXI_X2NNapiaE/edit#gid=1096480691"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "uniqueId"
+          ],
+          "schema": [
+            {
+              "id": "uniqueId",
+              "displayName": "uniqueId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "provider",
+              "displayName": "provider",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "jobId",
+              "displayName": "jobId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "location",
+              "displayName": "location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "workMode",
+              "displayName": "workMode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "employmentType",
+              "displayName": "employmentType",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "experience",
+              "displayName": "experience",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "salaryMin",
+              "displayName": "salaryMin",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "salaryMax",
+              "displayName": "salaryMax",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "applyUrl",
+              "displayName": "applyUrl",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "jobUrl",
+              "displayName": "jobUrl",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "postedAt",
+              "displayName": "postedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "applied",
+              "displayName": "applied",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createdAt",
+              "displayName": "createdAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        96,
+        -2784
+      ],
+      "id": "20212d0c-b9af-48eb-81aa-d09bfa6c5d28",
+      "name": "SaveToDB",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "oB0qGc5yuT5TYiuc",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "w2SvJxWSpN3Am1WO",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/w2SvJxWSpN3Am1WO",
+          "cachedResultName": "JobRanker"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        320,
+        -2784
+      ],
+      "id": "7595566b-42e2-4788-ab5e-aba7ae2522d4",
+      "name": "Call 'JobRanker'"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 12
+            },
+            {
+              "triggerAtHour": 21
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1920,
+        -2688
+      ],
+      "id": "ebcdf9b1-90a8-4512-89dd-46e945929f9e",
+      "name": "12pm,9pm"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "ReadFilters": {
+      "main": [
+        [
+          {
+            "node": "ReadProviders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ReadProviders": {
+      "main": [
+        [
+          {
+            "node": "BuildSearchQueue",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "BuildSearchInternshala",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BuildSearchQueue": {
+      "main": [
+        [
+          {
+            "node": "API, Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WellFound": {
+      "main": [
+        [
+          {
+            "node": "NormalizerWellFound",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NormalizerWellFound": {
+      "main": [
+        [
+          {
+            "node": "MasterNormalizer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MasterNormalizer": {
+      "main": [
+        [
+          {
+            "node": "SaveToDB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hirist": {
+      "main": [
+        [
+          {
+            "node": "NormalizerHirist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NormalizerHirist": {
+      "main": [
+        [
+          {
+            "node": "MasterNormalizer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Naukri": {
+      "main": [
+        [
+          {
+            "node": "NormalizerNaukri",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NormalizerNaukri": {
+      "main": [
+        [
+          {
+            "node": "MasterNormalizer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Internshala": {
+      "main": [
+        [
+          {
+            "node": "NormalizerInternshala",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NormalizerInternshala": {
+      "main": [
+        [
+          {
+            "node": "MasterNormalizer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BuildSearchInternshala": {
+      "main": [
+        [
+          {
+            "node": "Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "InternShala": {
+      "main": [
+        [
+          {
+            "node": "Internshala",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wellfound, Naukri, Hirist": {
+      "main": [
+        [
+          {
+            "node": "WellFound",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Hirist",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Naukri",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API, Search": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Wellfound, Naukri, Hirist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search": {
+      "main": [
+        [
+          {
+            "node": "InternShala",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SaveToDB": {
+      "main": [
+        [
+          {
+            "node": "Call 'JobRanker'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12pm,9pm": {
+      "main": [
+        [
+          {
+            "node": "ReadFilters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "45f6eede-17d8-42d3-8880-093759d72f44",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5e909e6f55d3805e136688acccf468dc7b4a739c506f9aa0c5aeeb5bae836825"
+  },
+  "nodeGroups": [],
+  "id": "wWoDkimGfGlNhTRD",
+  "tags": []
+}

@@ -1,0 +1,22 @@
+# Ignore everything inside auto-applier
+auto-applier/**
+
+# Keep only these files
+!auto-applier/login_helper.py
+!auto-applier/mac.py
+
+# Ignore n8n runtime data
+n8n_data/
+
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ignore profile data
+search-scraper/app/profiles/
+
+.DS_Store
+
+**/venv/
