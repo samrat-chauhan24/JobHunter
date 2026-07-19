@@ -241,13 +241,18 @@ async def search_internshala(data):
 
                         let posted = null;
 
-                        for (const span of qa(".detail-row-2-container span")) {
+                        const detail = q(".detail-row-2-container");
 
-                            const t = span.textContent.trim().toLowerCase();
+                        if (detail) {
 
-                            if (t.includes("ago") || t.includes("just now")) {
-                                posted = t;
-                                break;
+                            const text = detail.textContent.toLowerCase();
+
+                            const match = text.match(
+                                /(today|yesterday|\d+\s+(minute|minutes|hour|hours|day|days|week|weeks|month|months|year|years)\s+ago|just now)/
+                            );
+
+                            if (match) {
+                                posted = match[0];
                             }
                         }
 
