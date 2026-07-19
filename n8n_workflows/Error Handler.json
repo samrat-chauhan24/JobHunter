@@ -1,0 +1,96 @@
+{
+  "name": "Error Handler",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "236407e5-d269-4c01-800c-159b1ccf0d83",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"email\": \"chauhansamrat837@gmail.com\",\n  \"workflow\": \"{{ $json.workflow.name }}\",\n  \"failedNode\": \"{{ $json.execution.lastNodeExecuted }}\",\n  \"error\": \"{{ $json.execution.error.message }}\",\n  \"executionId\": \"{{ $json.execution.id }}\",\n  \"time\": \"{{ $now.setZone('Asia/Kolkata').toFormat('dd MMM yyyy HH:mm:ss') }}\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "d3ef39c4-2442-40c1-b771-2a7c2ce20daa",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "fromEmail": "samogics@gmail.com",
+        "toEmail": "={{$json.email}}",
+        "subject": "={{$json.workflow}} Failed • {{$json.failedNode}}",
+        "html": "=<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"UTF-8\">\n</head>\n\n<body style=\"margin:0;padding:30px;background:#f4f6f9;font-family:Arial,sans-serif;\">\n\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n<tr>\n<td align=\"center\">\n\n<table width=\"650\" cellpadding=\"0\" cellspacing=\"0\"\nstyle=\"background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 8px 25px rgba(0,0,0,.08);\">\n\n<!-- Header -->\n<tr>\n<td style=\"background:#dc2626;color:#ffffff;padding:28px;text-align:center;\">\n\n<h1 style=\"margin:0;font-size:28px;\">\nJobHunter\n</h1>\n\n<p style=\"margin-top:8px;color:#fee2e2;\">\nWorkflow Failure Report\n</p>\n\n</td>\n</tr>\n\n<!-- Body -->\n<tr>\n<td style=\"padding:35px;\">\n\n<h2 style=\"margin-top:0;color:#111827;\">\nA JobHunter workflow has failed.\n</h2>\n\n<p style=\"color:#555;font-size:16px;\">\nThe workflow stopped unexpectedly. Review the details below to identify and resolve the issue.\n</p>\n\n<table width=\"100%\" cellpadding=\"12\" cellspacing=\"0\"\nstyle=\"border-collapse:collapse;margin-top:25px;\">\n\n<tr style=\"background:#f9fafb;\">\n<td><b>Workflow</b></td>\n<td align=\"right\">{{$json.workflow}}</td>\n</tr>\n\n<tr>\n<td><b>Failed Node</b></td>\n<td align=\"right\">{{$json.failedNode}}</td>\n</tr>\n\n<tr style=\"background:#f9fafb;\">\n<td><b>Execution ID</b></td>\n<td align=\"right\">{{$json.executionId}}</td>\n</tr>\n\n<tr>\n<td><b>Time</b></td>\n<td align=\"right\">{{$json.time}}</td>\n</tr>\n\n<tr style=\"background:#f9fafb;\">\n<td><b>Status</b></td>\n<td align=\"right\" style=\"color:#dc2626;font-weight:bold;\">\nFailed\n</td>\n</tr>\n\n</table>\n\n<h3 style=\"margin-top:35px;color:#111827;\">\nError Details\n</h3>\n\n<div style=\"\nbackground:#fff5f5;\nborder-left:5px solid #dc2626;\npadding:16px;\nborder-radius:6px;\nfont-family:Consolas,Monaco,monospace;\nfont-size:14px;\ncolor:#7f1d1d;\nwhite-space:pre-wrap;\nword-break:break-word;\n\">\n\n{{$json.error}}\n\n</div>\n\n<p style=\"margin-top:30px;color:#666;\">\nPlease review the failed node in n8n, fix the issue, and re-run the workflow if necessary.\n</p>\n\n</td>\n</tr>\n\n\n</table>\n\n</td>\n</tr>\n</table>\n\n</body>\n</html>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "f029b63a-3b79-4f92-8920-c7881c70f8a0",
+      "name": "Send an Email",
+      "webhookId": "1f108bce-377a-4832-b869-43d0f590024d",
+      "credentials": {
+        "smtp": {
+          "id": "K6keUEwoj3top9ob",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Send an Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "607c9e42-313b-438d-8e68-32fd6beb0cdb",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5e909e6f55d3805e136688acccf468dc7b4a739c506f9aa0c5aeeb5bae836825"
+  },
+  "nodeGroups": [],
+  "id": "ADe9SMHjSoQMvRlW",
+  "tags": []
+}

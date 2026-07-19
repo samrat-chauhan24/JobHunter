@@ -105,7 +105,7 @@ def generate_cover_note(job_title, company):
     Write a highly concise, impressive, and recruiter-friendly application note (maximum 3 short sentences) 
     for the position of {job_title} at {company} based strictly on this profile:
     {RESUME_CONTEXT}
-    Tone: Professional and high-value. Sign off directly as 'Ronak Malik'. No placeholder brackets.
+    Tone: Professional and high-value. Sign off directly as 'Samrat Chauhan'. No placeholder brackets.
     """
     try:
         chat_completion = groq_client.chat.completions.create(
@@ -116,7 +116,7 @@ def generate_cover_note(job_title, company):
         )
         return chat_completion.choices[0].message.content.strip()
     except Exception as e:
-        return f"I am a final-year CS (AI/ML) student with strong experience in MERN, Next.js, and multi-agent AI systems. I am highly interested in the {job_title} role at {company}. - Ronak Malik"
+        return f"I am a final-year CS (AI/ML) student with strong experience in MERN, Next.js, and multi-agent AI systems. I am highly interested in the {job_title} role at {company}. - Samrat Chauhan"
 
 def handle_generic_form_elements(page, job_title, company):
     try:
@@ -353,12 +353,12 @@ def apply_generic_portal(page, url, job_title, company):
         page.wait_for_timeout(2000)
         
         input_mappings = {
-            r"(first.*name|full.*name|name)": "Ronak Malik",
-            r"(email)": "reeshumalik7@gmail.com",
-            r"(phone|mobile|contact)": "+919548354477",
-            r"(linkedin)": "https://linkedin.com/in/Ronak-Malik",
-            r"(github)": "https://github.com/Ronak-Malik",
-            r"(portfolio|website)": "https://github.com/Ronak-Malik"
+            r"(first.*name|full.*name|name)": "Samrat Chauhan",
+            r"(email)": "chauhansamrat837@gmail.com",
+            r"(phone|mobile|contact)": "+917668795490",
+            r"(linkedin)": "https://linkedin.com/in/samratchauhan",
+            r"(github)": "https://github.com/samrat-chauhan24",
+            r"(portfolio|website)": "https://github.com/samrat-chauhan24"
         }
         
         all_inputs = page.locator("input, textarea")
@@ -400,7 +400,7 @@ def apply_generic_portal(page, url, job_title, company):
 
         handle_generic_form_elements(page, job_title, company)
 
-        resume_filename = "ronak_malik-resume.pdf"
+        resume_filename = "Samrat_Chauhan_Resume1.pdf"
         if os.path.exists(resume_filename):
             file_inputs = page.locator("input[type='file']")
             for i in range(file_inputs.count()):

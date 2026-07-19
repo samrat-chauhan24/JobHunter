@@ -335,19 +335,6 @@
     },
     {
       "parameters": {
-        "jsCode": "const jobs = $(\"ReadJobs\").all().map(i => i.json);\n\n// All 85 AI scores\nconst scores = $input.all().map(i => i.json);\n\n// IDs that passed\nconst allowed = new Set(\n  scores\n    .filter(s => s.atsScore >= 70)\n    .map(s => s.uniqueId)\n);\n\n// Return original jobs\nreturn jobs\n  .filter(job => allowed.has(job.uniqueId))\n  .map(job => ({ json: job }));"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        2784,
-        -320
-      ],
-      "id": "55aa9753-6033-4e83-a547-59d0ec468b09",
-      "name": "Code in JavaScript"
-    },
-    {
-      "parameters": {
         "operation": "appendOrUpdate",
         "documentId": {
           "__rl": true,
@@ -993,6 +980,153 @@
           "name": "Google Sheets account"
         }
       }
+    },
+    {
+      "parameters": {
+        "jsCode": "const jobs = $(\"ReadJobs\").all().map(i => i.json);\n\n// All 85 AI scores\nconst scores = $input.all().map(i => i.json);\n\n// IDs that passed\nconst allowed = new Set(\n  scores\n    .filter(s => s.atsScore >= 70)\n    .map(s => s.uniqueId)\n);\n\n// Return original jobs\nreturn jobs\n  .filter(job => allowed.has(job.uniqueId))\n  .map(job => ({ json: job }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2784,
+        -320
+      ],
+      "id": "55aa9753-6033-4e83-a547-59d0ec468b09",
+      "name": "FilterATS"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "729f9bb6-1f7a-47cb-ad31-a680b672a0bc",
+              "name": "email",
+              "value": "chauhansamrat837@gmail.com",
+              "type": "string"
+            },
+            {
+              "id": "07927046-c61f-48c6-8036-75aa59ae8a12",
+              "name": "subject",
+              "value": "=JobHunter • {{$now.toFormat(\"dd MMM yyyy HH:mm:ss\")}}",
+              "type": "string"
+            },
+            {
+              "id": "3d20a86b-092c-40af-b328-f9ee61cbec61",
+              "name": "completedAt",
+              "value": "={{$now.toFormat(\"dd MMM yyyy HH:mm:ss\")}}",
+              "type": "string"
+            },
+            {
+              "id": "ec3e64a3-f1b7-455b-b1d4-f27000a90bd4",
+              "name": "totalJobs",
+              "value": "={{$input.all().length}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3296,
+        -512
+      ],
+      "id": "9eddf3b0-c5c2-4ad9-a84b-93be57d2e50d",
+      "name": "EmalContent"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "729f9bb6-1f7a-47cb-ad31-a680b672a0bc",
+              "name": "email",
+              "value": "reeshumalik7@gmail.com",
+              "type": "string"
+            },
+            {
+              "id": "07927046-c61f-48c6-8036-75aa59ae8a12",
+              "name": "subject",
+              "value": "=JobHunter • {{$now.toFormat(\"dd MMM yyyy HH:mm:ss\")}}",
+              "type": "string"
+            },
+            {
+              "id": "3d20a86b-092c-40af-b328-f9ee61cbec61",
+              "name": "completedAt",
+              "value": "={{$now.toFormat(\"dd MMM yyyy HH:mm:ss\")}}",
+              "type": "string"
+            },
+            {
+              "id": "ec3e64a3-f1b7-455b-b1d4-f27000a90bd4",
+              "name": "totalJobs",
+              "value": "={{$input.all().length}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3296,
+        -320
+      ],
+      "id": "96991bde-1b25-4818-aca0-9aed9479caf6",
+      "name": "EmalContent1"
+    },
+    {
+      "parameters": {
+        "fromEmail": "samogics@gmail.com",
+        "toEmail": "={{$json.email}}",
+        "subject": "={{$json.subject}}",
+        "html": "=<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"UTF-8\">\n</head>\n\n<body style=\"margin:0;padding:30px;background:#f4f6f9;font-family:Arial,sans-serif;\">\n\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n<tr>\n<td align=\"center\">\n\n<table width=\"650\" cellpadding=\"0\" cellspacing=\"0\"\nstyle=\"background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 8px 25px rgba(0,0,0,.08);\">\n\n<tr>\n<td style=\"background:#111827;color:#fff;padding:28px;text-align:center;\">\n\n<h1 style=\"margin:0;font-size:28px;\">\nJobHunter\n</h1>\n\n<p style=\"margin-top:8px;color:#d1d5db;\">\nDaily Job Search Report\n</p>\n\n</td>\n</tr>\n\n<tr>\n<td style=\"padding:35px;\">\n\n<h2 style=\"margin-top:0;color:#111827;\">\nWorkflow Completed Successfully\n</h2>\n\n<p style=\"color:#555;font-size:16px;\">\nThe scheduled JobHunter workflow has completed successfully.\n</p>\n\n<table width=\"100%\" cellpadding=\"12\" cellspacing=\"0\"\nstyle=\"border-collapse:collapse;margin-top:25px;\">\n\n<tr style=\"background:#f9fafb;\">\n<td><b>Total Jobs Found</b></td>\n<td align=\"right\">{{$json.totalJobs}}</td>\n</tr>\n\n\n<tr style=\"background:#f9fafb;\">\n<td><b>Completed At</b></td>\n<td align=\"right\">{{$json.completedAt}}</td>\n</tr>\n\n<tr>\n<td><b>Status</b></td>\n<td align=\"right\" style=\"color:#16a34a;\">\nCompleted\n</td>\n</tr>\n\n</table>\n\n<p style=\"margin-top:35px;color:#666;\">\nAll supported providers were searched, jobs were ranked using AI,\ncandidate sheets were updated, and the search database was cleaned.\n</p>\n\n</td>\n</tr>\n\n\n\n</table>\n\n</td>\n</tr>\n</table>\n\n</body>\n</html>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        3584,
+        -320
+      ],
+      "id": "a5c6cce4-a9f4-4979-92dc-44fe2c90c21e",
+      "name": "ToRonak",
+      "webhookId": "be134471-cf56-4398-bb6a-78a9bd865c03",
+      "credentials": {
+        "smtp": {
+          "id": "K6keUEwoj3top9ob",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "samogics@gmail.com",
+        "toEmail": "={{$json.email}}",
+        "subject": "={{$json.subject}}",
+        "html": "=<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"UTF-8\">\n</head>\n\n<body style=\"margin:0;padding:30px;background:#f4f6f9;font-family:Arial,sans-serif;\">\n\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n<tr>\n<td align=\"center\">\n\n<table width=\"650\" cellpadding=\"0\" cellspacing=\"0\"\nstyle=\"background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 8px 25px rgba(0,0,0,.08);\">\n\n<tr>\n<td style=\"background:#111827;color:#fff;padding:28px;text-align:center;\">\n\n<h1 style=\"margin:0;font-size:28px;\">\nJobHunter\n</h1>\n\n<p style=\"margin-top:8px;color:#d1d5db;\">\nDaily Job Search Report\n</p>\n\n</td>\n</tr>\n\n<tr>\n<td style=\"padding:35px;\">\n\n<h2 style=\"margin-top:0;color:#111827;\">\nWorkflow Completed Successfully\n</h2>\n\n<p style=\"color:#555;font-size:16px;\">\nThe scheduled JobHunter workflow has completed successfully.\n</p>\n\n<table width=\"100%\" cellpadding=\"12\" cellspacing=\"0\"\nstyle=\"border-collapse:collapse;margin-top:25px;\">\n\n<tr style=\"background:#f9fafb;\">\n<td><b>Total Jobs Found</b></td>\n<td align=\"right\">{{$json.totalJobs}}</td>\n</tr>\n\n\n<tr style=\"background:#f9fafb;\">\n<td><b>Completed At</b></td>\n<td align=\"right\">{{$json.completedAt}}</td>\n</tr>\n\n<tr>\n<td><b>Status</b></td>\n<td align=\"right\" style=\"color:#16a34a;\">\nCompleted\n</td>\n</tr>\n\n</table>\n\n<p style=\"margin-top:35px;color:#666;\">\nAll supported providers were searched, jobs were ranked using AI,\ncandidate sheets were updated, and the search database was cleaned.\n</p>\n\n</td>\n</tr>\n\n\n\n</table>\n\n</td>\n</tr>\n</table>\n\n</body>\n</html>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        3584,
+        -512
+      ],
+      "id": "cb21a9aa-2cb9-4bf8-80e6-7d5daa1d2b10",
+      "name": "ToSamrat",
+      "webhookId": "be134471-cf56-4398-bb6a-78a9bd865c03",
+      "credentials": {
+        "smtp": {
+          "id": "K6keUEwoj3top9ob",
+          "name": "SMTP account"
+        }
+      }
     }
   ],
   "pinData": {},
@@ -1166,7 +1300,7 @@
       "main": [
         [
           {
-            "node": "Code in JavaScript",
+            "node": "FilterATS",
             "type": "main",
             "index": 0
           }
@@ -1220,7 +1354,51 @@
         ]
       ]
     },
-    "Code in JavaScript": {
+    "SamratSheet": {
+      "main": [
+        [
+          {
+            "node": "EmalContent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TriggeredByJobSearch": {
+      "main": [
+        [
+          {
+            "node": "DownloadResume",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RonakSheet": {
+      "main": [
+        [
+          {
+            "node": "EmalContent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ChiragSheet": {
+      "main": [
+        [
+          {
+            "node": "ClearDB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FilterATS": {
       "main": [
         [
           {
@@ -1241,32 +1419,22 @@
         ]
       ]
     },
-    "SamratSheet": {
-      "main": [
-        []
-      ]
-    },
-    "TriggeredByJobSearch": {
+    "EmalContent": {
       "main": [
         [
           {
-            "node": "DownloadResume",
+            "node": "ToSamrat",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "RonakSheet": {
-      "main": [
-        []
-      ]
-    },
-    "ChiragSheet": {
+    "EmalContent1": {
       "main": [
         [
           {
-            "node": "ClearDB",
+            "node": "ToRonak",
             "type": "main",
             "index": 0
           }
@@ -1278,9 +1446,12 @@
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
-    "availableInMCP": false
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "timezone": "Asia/Kolkata",
+    "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "e7146a2f-4a4a-40e5-8d74-e41d481050f2",
+  "versionId": "72c4a31d-1289-4398-8930-df28d4d06166",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "5e909e6f55d3805e136688acccf468dc7b4a739c506f9aa0c5aeeb5bae836825"
