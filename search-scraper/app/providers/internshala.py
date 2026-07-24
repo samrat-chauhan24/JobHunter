@@ -236,24 +236,35 @@ async def search_internshala(data):
 
                         const text = (selector) => {
                             const el = q(selector);
-                            return el ? el.textContent.trim() : null;
+                            return el?.textContent?.trim() ?? "";
                         };
-
+                                              
                         let posted = null;
 
-                        const detail = q(".detail-row-2-container");
+                        // 1. Preferred source: green status badge
+                        const status = q(".status-success span");
 
-                        if (detail) {
+                        if (status) {
+                            posted = status.innerText.trim();
+                        }
 
-                            const text = detail.textContent.toLowerCase();
+                        // 2. Fallback: search the whole card text
+                        if (!posted) {
+
+                            const text = card.innerText;
 
                             const match = text.match(
-                                /(today|yesterday|\d+\s+(minute|minutes|hour|hours|day|days|week|weeks|month|months|year|years)\s+ago|just now)/
+                                /(Just now|Today|Yesterday|Few hours ago|Few minutes ago|A few hours ago|Couple of hours ago|\d+\s+(minute|minutes|hour|hours|day|days|week|weeks|month|months|year|years)\s+ago)/i
                             );
 
                             if (match) {
                                 posted = match[0];
                             }
+                        }
+
+                        // 3. Final fallback
+                        if (!posted) {
+                            posted = "";
                         }
 
                         const experience = (() => {
@@ -270,7 +281,8 @@ async def search_internshala(data):
 
                         return {
 
-                            href: card.dataset.href,
+                            href: q("a.job-title-href")?.href ??
+                                    q("a.job-title-href")?.getAttribute("href"),  
 
                             jobId: card.getAttribute("internshipid"),
 
@@ -301,7 +313,7 @@ async def search_internshala(data):
                     # POSTED FILTER
                     # ----------------------------------
 
-                    posted = job["posted"]
+                    posted = (job["posted"] or "").lower()
 
                     if posted:
 
@@ -311,7 +323,7 @@ async def search_internshala(data):
 
                                 days = int(posted.split()[0])
 
-                                if days >= 3:
+                                if days >= 2:
 
                                     continue
 
@@ -337,11 +349,7 @@ async def search_internshala(data):
 
                         "title": job["title"],
 
-                        "url": (
-                            f"https://internshala.com{job['href']}"
-                            if job["href"]
-                            else None
-                        ),
+                        "url": job["href"],
 
                         "location": job["location"],
 

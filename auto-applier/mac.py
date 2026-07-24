@@ -319,11 +319,18 @@ def apply_internshala(page, url, job_title, company):
                 is_disabled = textarea.evaluate("el => el.disabled")
                 if not is_disabled:
                     cover_note = generate_cover_note(job_title, company)
+                    print(f"    ✍️ [TYPING INTERNSHALA COVER NOTE]: \n      {cover_note}")
                     textarea.fill(cover_note)
                 
             proceed_btn = page.locator("button:has-text('Proceed to application')").first
             if proceed_btn.is_visible(): 
                 proceed_btn.evaluate("el => el.click()")
+                page.wait_for_timeout(1500)
+                
+                # FIX: Check for the secondary "Submit" button if Internshala spawns it
+                final_submit_btn = page.locator("button:has-text('Submit'), input[type='submit']").first
+                if final_submit_btn.is_visible():
+                    final_submit_btn.evaluate("el => el.click()")
                 
             page.wait_for_timeout(3500)
             return True

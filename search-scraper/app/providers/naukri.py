@@ -52,7 +52,11 @@ async def search_naukri(data):
             await keyword.wait_for(state="visible", timeout=10000)
 
             await keyword.click()
-            await keyword.fill(data["keyword"])
+            await keyword.fill("")
+            await keyword.type(
+                data["keyword"],
+                delay=15,
+            )
 
             print(f"✓ Keyword: {data['keyword']}")
 
@@ -96,8 +100,11 @@ async def search_naukri(data):
             # Clear any existing value
             await location.fill("")
 
-            # Type both locations
-            await location.fill("Noida, Gurugram, Delhi / NCR")
+            # Type naturally instead of pasting
+            await location.type(
+                "Noida, Gurugram, Delhi / NCR",
+                delay=15,
+            )
 
             # Commit the value
             await location.press("Tab")
